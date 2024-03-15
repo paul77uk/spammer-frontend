@@ -8,68 +8,52 @@ export default function Home() {
   const [editText, setEditText] = useState("");
 
   const fetchApi = async () => {
-    const api = "https://jsonplaceholder.typicode.com/posts";
+    const api = "https://spammer-backend.onrender.com/messages";
     const response = await fetch(`${api}`, { cache: "no-store" });
     const fetchedNotes = await response.json();
 
-    setNotes(fetchedNotes);
+    setNotes(fetchedNotes.messages);
   };
 
   useEffect(() => {
     fetchApi();
-  }, []);
+  }, [notes]);
 
   const postMethod = async (e) => {
     e.preventDefault();
-    const api = "https://jsonplaceholder.typicode.com/posts";
-    const response = await fetch(`${api}`, {
+    const api = "https://spammer-backend.onrender.com/messages";
+    await fetch(`${api}`, {
+      cache: "no-store",
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ title: text }),
+      body: JSON.stringify({ text: text }),
     });
-    const data = await response.json();
-    const newNotes = [...notes, data];
-    setNotes(newNotes);
     setText("");
   };
 
   const putMethod = async (e, note) => {
     e.preventDefault();
     console.log(note.id);
-    const api = `https://jsonplaceholder.typicode.com/posts/${note.id}`;
-    const response = await fetch(`${api}`, {
+    const api = `https://spammer-backend.onrender.com/messages/${note.id}`;
+    await fetch(`${api}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ title: `${editText}` }),
+      body: JSON.stringify({ text: `${editText}` }),
     });
-    const data = await response.json();
 
-    const newNotes = notes.map((n) => {
-      if (n.id === note.id) {
-        return data;
-      }
-      return n;
-    });
-    setNotes(newNotes);
-
-   
-      document.querySelector(`.edit-${note.id}`).style.display = "none";
-      document.querySelector(`.message-${note.id}`).style.display = "block";
-    
+    document.querySelector(`.edit-${note.id}`).style.display = "none";
+    document.querySelector(`.message-${note.id}`).style.display = "block";
   };
 
   const deleteMethod = async (note) => {
-    const api = `https://jsonplaceholder.typicode.com/posts/${note.id}`;
-    const response = await fetch(`${api}`, {
+    const api = `https://spammer-backend.onrender.com/messages/${note.id}`;
+    await fetch(`${api}`, {
       method: "DELETE",
     });
-    const data = await response.json();
-    const newNotes = notes.filter((n) => n.id !== note.id);
-    setNotes(newNotes);
   };
 
   const showEditInput = (note) => {
@@ -82,8 +66,19 @@ export default function Home() {
       document.querySelector(`.edit-${note.id}`).style.display = "block";
     }
 
-    setEditText(note.title);
+    setEditText(note.text);
   };
+
+  const likeMethod = async (note) => {
+    const api = `https://spammer-backend.onrender.com/messages/${note.id}`;
+    await fetch(`${api}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ likes: note.likes + 1 }),
+    });
+  }
 
   return (
     <main>
@@ -102,8 +97,11 @@ export default function Home() {
         {notes.map((note) => (
           <div className="message" key={note.id}>
             <div className={`message-${note.id}`}>
-              {note.title}{" "}
+              {note.text}{" "}
               <span id="cluds">
+                <div className="clud" onClick={() => likeMethod(note)}>
+                  👍 {note.likes}
+                </div>
                 <div className="clud" onClick={() => showEditInput(note)}>
                   ✏️
                 </div>
@@ -112,6 +110,10 @@ export default function Home() {
                 </div>
               </span>
             </div>
+
+            <div>{note.children.map(child => {
+              return <div>{child.text}</div>
+            })}</div>
 
             <div className={`edit-${note.id}`} style={{ display: "none" }}>
               <form onSubmit={(e) => putMethod(e, note)}>
