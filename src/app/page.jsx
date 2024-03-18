@@ -8,11 +8,12 @@ export default function Home() {
   const [editText, setEditText] = useState("");
 
   const fetchApi = async () => {
-    const api = "https://spammer-backend.onrender.com/messages";
+    const api = "https://spammer-backend.netlify.app/api/posts";
     const response = await fetch(`${api}`, { cache: "no-store" });
     const fetchedNotes = await response.json();
 
-    setNotes(fetchedNotes.messages);
+    setNotes(fetchedNotes.posts);
+    console.log(fetchedNotes);
   };
 
   useEffect(() => {
@@ -21,7 +22,7 @@ export default function Home() {
 
   const postMethod = async (e) => {
     e.preventDefault();
-    const api = "https://spammer-backend.onrender.com/messages";
+    const api = "https://spammer-backend.netlify.app/api/posts";
     await fetch(`${api}`, {
       cache: "no-store",
       method: "POST",
@@ -36,7 +37,7 @@ export default function Home() {
   const putMethod = async (e, note) => {
     e.preventDefault();
     console.log(note.id);
-    const api = `https://spammer-backend.onrender.com/messages/${note.id}`;
+    const api = `https://spammer-backend.netlify.app/api/posts/${note.id}`;
     await fetch(`${api}`, {
       method: "PUT",
       headers: {
@@ -50,7 +51,7 @@ export default function Home() {
   };
 
   const deleteMethod = async (note) => {
-    const api = `https://spammer-backend.onrender.com/messages/${note.id}`;
+    const api = `https://spammer-backend.netlify.app/api/posts/${note.id}`;
     await fetch(`${api}`, {
       method: "DELETE",
     });
@@ -70,7 +71,7 @@ export default function Home() {
   };
 
   const likeMethod = async (note) => {
-    const api = `https://spammer-backend.onrender.com/messages/${note.id}`;
+    const api = `https://spammer-backend.netlify.app/api/posts/${note.id}`;
     await fetch(`${api}`, {
       method: "PUT",
       headers: {
@@ -78,7 +79,27 @@ export default function Home() {
       },
       body: JSON.stringify({ likes: note.likes + 1 }),
     });
-  }
+  };
+
+  const postChild = async (e, note) => {
+    e.preventDefault();
+    const api = `https://spammer-backend.netlify.app/api/posts/${note.id}/children`;
+    await fetch(`${api}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        children: note.children.push({
+          id: 1,
+          text: "I'm a child",
+          likes: 0,
+          children: [],
+          parentId: note.id,
+        }),
+      }),
+    });
+  };
 
   return (
     <main>
@@ -108,12 +129,19 @@ export default function Home() {
                 <div className="clud" onClick={() => deleteMethod(note)}>
                   🗑️
                 </div>
+                <div className="clud" onClick={(e) => postChild(e, note)}>
+                  💬
+                </div>
               </span>
             </div>
 
-            <div>{note.children.map(child => {
-              return <div>{child.text}</div>
-            })}</div>
+            <div id="messages">
+              <div>
+                {note.children.map((child) => {
+                  return <div onClick={postChild(note)}>{child.text}</div>;
+                })}
+              </div>
+            </div>
 
             <div className={`edit-${note.id}`} style={{ display: "none" }}>
               <form onSubmit={(e) => putMethod(e, note)}>
